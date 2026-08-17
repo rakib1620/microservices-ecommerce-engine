@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  # API service for handling incoming HTTP requests and application routing
+  api:
+    build: ./application/api
+    container_name: shopflow_api
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://user:password@db:5432/shopflow_db
+    depends_on:
+      - db
+      - redis
+    restart: always
+
+  # Background worker service for processing asynchronous tasks and event queues
+  worker:
+    build: ./application/worker
+    container_name: shopflow_worker
+    environment:
+      - DATABASE_URL=postgresql://user:password@db:5432/shopflow_db
+    depends_on:
+      - db
+      - redis
+    restart: always
+
+  # In-memory data store for caching and message queue management
+  redis:
+    image: redis:alpine
+    container_name: shopflow_redis
+    ports:
+      - "6379:6379"
+    restart: always
+
+  # Relational database service for persistent data storage
+  db:
+    image: postgres:15
+    container_name: shopflow_db
+    restart: always
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: shopflow_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
