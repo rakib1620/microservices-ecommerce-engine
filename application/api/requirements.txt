@@ -1,7 +1,7 @@
 fastapi==0.110.0
 uvicorn==0.28.0
-pydantic==2.6.4
-redis==5.0.2
+sqlalchemy==2.0.27
 psycopg2-binary==2.9.9
-sqlalchemy
-psycopg2-binary
+redis==5.0.2
+passlib[bcrypt]
+pydantic[email]
