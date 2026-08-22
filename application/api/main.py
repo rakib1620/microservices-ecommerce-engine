@@ -1,14 +1,16 @@
 import os
 import json
 from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 import redis
+from jose import JWTError, jwt
 
 from database import engine, Base, get_db
 import models
 from schemas import UserCreate, UserResponse
-from security import hash_password, verify_password
+from security import hash_password, verify_password, create_access_token, SECRET_KEY, ALGORITHM
 
 # Create all database tables automatically on startup
 models.Base.metadata.create_all(bind=engine)
@@ -24,12 +26,36 @@ try:
 except Exception as e:
     print(f"Redis connection error: {e}")
 
+# OAuth2 scheme for token authentication (Points to /auth/login)
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
+
+def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    """
+    Validate JWT token and return the current authenticated user from the database.
+    """
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        email: str = payload.get("sub")
+        if email is None:
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+    
+    user = db.query(models.User).filter(models.User.email == email).first()
+    if user is None:
+        raise credentials_exception
+    return user
+
 # Pydantic schema for incoming order requests
 class OrderCreate(BaseModel):
     item_name: str
     quantity: int
     total_price: float
-    customer_email: str
 
 # Root endpoint to check API health
 @app.get("/")
@@ -43,7 +69,7 @@ def read_root():
     }
 
 # ==========================================
-# USER AUTHENTICATION ENDPOINTS (NEW)
+# USER AUTHENTICATION ENDPOINTS
 # ==========================================
 
 @app.post("/auth/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
@@ -54,22 +80,20 @@ def register_user(user: UserCreate, db: Session = Depends(get_db)):
     2. Securely hash the password.
     3. Save the new user to the database.
     """
-    # Check if user already exists
     existing_user = db.query(models.User).filter(models.User.email == user.email).first()
     if existing_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email already registered"
         )
-    
-    # Hash the password and create new user instance
+
     hashed_pwd = hash_password(user.password)
     new_user = models.User(email=user.email, hashed_password=hashed_pwd)
-    
+
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
-    
+
     return new_user
 
 
@@ -79,7 +103,7 @@ def login_user(user: UserCreate, db: Session = Depends(get_db)):
     Login user:
     1. Verify if user exists in the database.
     2. Verify if the password matches the hashed password.
-    3. Return a successful login message.
+    3. Generate and return a JWT access token.
     """
     db_user = db.query(models.User).filter(models.User.email == user.email).first()
     if not db_user or not verify_password(user.password, db_user.hashed_password):
@@ -88,18 +112,29 @@ def login_user(user: UserCreate, db: Session = Depends(get_db)):
             detail="Invalid credentials",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
-    return {"message": "Login successful", "email": db_user.email}
+
+    # Generate JWT Access Token
+    access_token = create_access_token(data={"sub": db_user.email})
+
+    return {
+        "access_token": access_token,
+        "token_type": "bearer"
+    }
 
 
 # ==========================================
-# ORDER ENDPOINTS
+# ORDER ENDPOINTS (PROTECTED)
 # ==========================================
 
 @app.post("/orders/")
-def create_order(order: OrderCreate, db: Session = Depends(get_db)):
+def create_order(
+    order: OrderCreate, 
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
     """
     Create a new order in PostgreSQL database and queue it in Redis for background processing.
+    Requires a valid JWT Bearer Token.
     """
     try:
         # 1. Save the order into PostgreSQL database
@@ -113,13 +148,13 @@ def create_order(order: OrderCreate, db: Session = Depends(get_db)):
         db.commit()
         db.refresh(new_order)
 
-        # 2. Prepare event payload and push to Redis queue for background worker
+        # 2. Prepare event payload and push to Redis queue for background worker (using authenticated user's email)
         order_event = {
             "order_id": new_order.id,
             "item_name": new_order.item_name,
             "quantity": new_order.quantity,
             "total_price": new_order.total_price,
-            "customer_email": order.customer_email,
+            "customer_email": current_user.email,
             "status": new_order.status
         }
 
@@ -128,6 +163,7 @@ def create_order(order: OrderCreate, db: Session = Depends(get_db)):
         return {
             "message": "Order created successfully and queued for processing!",
             "order_id": new_order.id,
+            "customer": current_user.email,
             "status": new_order.status
         }
 

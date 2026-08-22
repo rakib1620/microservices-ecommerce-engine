@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShopFlow - Next-Gen E-Commerce Engine</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #0b0f19;
+            color: #f3f4f6;
+        }
+        .glass-card {
+            background: rgba(17, 24, 39, 0.75);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .glow-text {
+            background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 50%, #f472b6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between p-6">
+
+    <!-- Top Navigation -->
+    <header class="w-full max-w-6xl mx-auto flex justify-between items-center py-4 border-b border-gray-800/60 mb-8">
+        <div class="text-xl font-bold tracking-wider text-white flex items-center gap-2">
+            <span class="w-3 h-3 rounded-full bg-indigo-500 animate-pulse"></span> shopflow<span class="text-indigo-400">.dev</span>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <nav class="hidden md:flex gap-6 text-sm font-medium text-gray-400">
+            <button onclick="switchTab('welcome')" id="nav-welcome" class="nav-btn text-indigo-400 transition hover:text-white">Home</button>
+            <button onclick="switchTab('products')" id="nav-products" class="nav-btn transition hover:text-white">Products</button>
+            <button onclick="switchTab('orders')" id="nav-orders" class="nav-btn transition hover:text-white">My Orders</button>
+            <button onclick="switchTab('auth')" id="nav-auth" class="nav-btn transition hover:text-white">Account</button>
+        </nav>
+
+        <div id="auth-status" class="text-xs bg-gray-900 border border-gray-800 px-3 py-1.5 rounded-full text-gray-400">
+            ● Not Logged In
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="w-full max-w-6xl mx-auto flex-1 mb-12">
+
+        <!-- 1. WELCOME / HOME PAGE -->
+        <div id="tab-welcome" class="tab-content active text-center py-16">
+            <div class="inline-block mb-4 px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-semibold tracking-wide uppercase">
+                Event-Driven Microservices E-Commerce
+            </div>
+            <h1 class="text-4xl md:text-6xl font-extrabold tracking-tight mb-6 text-white">
+                Next-Gen Shopping with <br><span class="glow-text">Instant Event Dispatch</span>
+            </h1>
+            <p class="text-gray-400 max-w-2xl mx-auto text-base mb-8">
+                Experience lightning-fast order processing powered by FastAPI, Redis Message Queues, and automated background workers.
+            </p>
+            <div class="flex justify-center gap-4">
+                <button onclick="switchTab('products')" class="bg-gradient-to-r from-indigo-500 to-purple-600 hover:opacity-90 text-white font-medium px-6 py-3 rounded-xl text-sm transition shadow-lg shadow-indigo-500/25">
+                    Explore Products 🛍️
+                </button>
+                <button onclick="switchTab('auth')" class="bg-gray-800 hover:bg-gray-700 text-white font-medium px-6 py-3 rounded-xl text-sm transition border border-gray-700">
+                    Login / Register
+                </button>
+            </div>
+        </div>
+
+        <!-- 2. PRODUCTS PAGE -->
+        <div id="tab-products" class="tab-content">
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold text-white mb-2">Featured Products</h2>
+                <p class="text-gray-400 text-sm">Select an item to instantly fill in the order form.</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Product Card 1 -->
+                <div class="glass-card p-6 rounded-2xl flex flex-col justify-between">
+                    <div>
+                        <div class="h-40 bg-gray-900/60 rounded-xl mb-4 flex items-center justify-center overflow-hidden p-2">
+                            <img src="mecha_keyboard.jpg" alt="Mechanical Keyboard" class="max-h-full object-contain mix-blend-lighten">
+                        </div>
+                        <h3 class="text-lg font-bold text-white mb-1">Mechanical Keyboard</h3>
+                        <p class="text-gray-400 text-xs mb-4">RGB Custom Hot-swappable wireless keyboard.</p>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-indigo-400 font-bold">$129.99</span>
+                        <button onclick="selectProduct('Mechanical Keyboard', 129.99)" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs px-4 py-2 rounded-lg transition">Order Now</button>
+                    </div>
+                </div>
+                <!-- Product Card 2 -->
+                <div class="glass-card p-6 rounded-2xl flex flex-col justify-between">
+                    <div>
+                        <div class="h-40 bg-gray-900/60 rounded-xl mb-4 flex items-center justify-center overflow-hidden p-2">
+                            <img src="mouse.jpg" alt="Ergonomic Mouse" class="max-h-full object-contain mix-blend-lighten scale-110">
+                        </div>
+                        <h3 class="text-lg font-bold text-white mb-1">Ergonomic Mouse</h3>
+                        <p class="text-gray-400 text-xs mb-4">Precision wireless mouse for developers & gamers.</p>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-indigo-400 font-bold">$59.99</span>
+                        <button onclick="selectProduct('Ergonomic Mouse', 59.99)" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs px-4 py-2 rounded-lg transition">Order Now</button>
+                    </div>
+                </div>
+                <!-- Product Card 3 -->
+                <div class="glass-card p-6 rounded-2xl flex flex-col justify-between">
+                    <div>
+                        <div class="h-40 bg-gray-900/60 rounded-xl mb-4 flex items-center justify-center overflow-hidden p-2">
+                            <img src="noise.jpg" alt="Noise Cancelling Headset" class="max-h-full object-contain mix-blend-lighten">
+                        </div>
+                        <h3 class="text-lg font-bold text-white mb-1">Noise Cancelling Headset</h3>
+                        <p class="text-gray-400 text-xs mb-4">Over-ear professional studio headphones.</p>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-indigo-400 font-bold">$199.99</span>
+                        <button onclick="selectProduct('Noise Cancelling Headset', 199.99)" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs px-4 py-2 rounded-lg transition">Order Now</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. ORDER DASHBOARD PAGE -->
+        <div id="tab-orders" class="tab-content">
+            <div class="max-w-xl mx-auto glass-card p-8 rounded-2xl shadow-2xl">
+                <h2 class="text-2xl font-bold mb-2 text-white">Place an Order</h2>
+                <p class="text-gray-400 text-sm mb-6">Secured endpoint requiring a valid JWT token.</p>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-400 mb-1">Item Name</label>
+                        <input type="text" id="itemName" placeholder="Select from products or type here"
+                            class="w-full bg-gray-900/80 border border-gray-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-purple-500 transition">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-400 mb-1">Quantity</label>
+                            <input type="number" id="quantity" value="1"
+                                class="w-full bg-gray-900/80 border border-gray-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-purple-500 transition">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-400 mb-1">Total Price ($)</label>
+                            <input type="number" id="totalPrice" value="99.99"
+                                class="w-full bg-gray-900/80 border border-gray-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-purple-500 transition">
+                        </div>
+                    </div>
+                    <button onclick="placeOrder()" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 text-white font-medium py-3 rounded-xl text-sm transition shadow-lg shadow-purple-500/25 mt-4">
+                        Dispatch Order to Queue 🚀
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. AUTHENTICATION PAGE -->
+        <div id="tab-auth" class="tab-content">
+            <div class="max-w-md mx-auto glass-card p-8 rounded-2xl shadow-2xl">
+                <h2 class="text-2xl font-bold mb-2 text-white">Account Access</h2>
+                <p class="text-gray-400 text-sm mb-6">Login or register to get your authorization token.</p>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-400 mb-1">Email Address</label>
+                        <input type="email" id="email" placeholder="user@shopflow.com"
+                            class="w-full bg-gray-900/80 border border-gray-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-indigo-500 transition">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-400 mb-1">Password</label>
+                        <input type="password" id="password" placeholder="••••••••"
+                            class="w-full bg-gray-900/80 border border-gray-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-indigo-500 transition">
+                    </div>
+
+                    <div class="flex gap-4 pt-2">
+                        <button onclick="handleAuth('register')" class="flex-1 bg-gray-800 hover:bg-gray-700 text-white font-medium py-2.5 rounded-xl text-sm transition border border-gray-700">
+                            Register
+                        </button>
+                        <button onclick="handleAuth('login')" class="flex-1 bg-gradient-to-r from-indigo-500 to-purple-600 hover:opacity-90 text-white font-medium py-2.5 rounded-xl text-sm transition shadow-lg shadow-indigo-500/25">
+                            Login
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Console / Response Output Section -->
+    <section class="w-full max-w-6xl mx-auto glass-card p-4 rounded-xl mb-4 font-mono text-xs text-indigo-300">
+        <div class="text-gray-500 mb-1 uppercase tracking-wider text-[10px]">System Console Output:</div>
+        <div id="console-output" class="text-gray-300 overflow-x-auto">Ready for actions...</div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="text-center text-xs text-gray-500">
+        ShopFlow Engine &bull; Event-Driven Microservices Architecture
+    </footer>
+
+    <!-- JavaScript Logic -->
+    <script>
+        const API_URL = "http://localhost:8000";
+        let accessToken = null;
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('text-indigo-400'));
+
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+            const navBtn = document.getElementById(`nav-${tabId}`);
+            if(navBtn) navBtn.classList.add('text-indigo-400');
+        }
+
+        function selectProduct(name, price) {
+            document.getElementById('itemName').value = name;
+            document.getElementById('totalPrice').value = price;
+            switchTab('orders');
+            logOutput(`Selected product: ${name} ($${price}). Ready to dispatch order.`);
+        }
+
+        function logOutput(message, isError = false) {
+            const consoleEl = document.getElementById("console-output");
+            consoleEl.style.color = isError ? "#f87171" : "#34d399";
+            consoleEl.innerText = typeof message === 'object' ? JSON.stringify(message, null, 2) : message;
+        }
+
+        async function handleAuth(action) {
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+
+            if (!email || !password) {
+                logOutput("Please enter both email and password!", true);
+                return;
+            }
+
+            const endpoint = action === 'register' ? '/auth/register' : '/auth/login';
+
+            try {
+                const response = await fetch(`${API_URL}${endpoint}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.detail || "Authentication failed");
+
+                if (action === 'login') {
+                    accessToken = data.access_token;
+                    document.getElementById("auth-status").innerHTML = `<span class="text-emerald-400 font-medium">● Connected (${email})</span>`;
+                    logOutput("Login Successful! JWT Token acquired.");
+                    switchTab('orders');
+                } else {
+                    logOutput("User Registered successfully! Now you can login.");
+                }
+            } catch (err) {
+                logOutput(err.message, true);
+            }
+        }
+
+        async function placeOrder() {
+            if (!accessToken) {
+                logOutput("Unauthorized! Please login first in the Account tab.", true);
+                switchTab('auth');
+                return;
+            }
+
+            const item_name = document.getElementById("itemName").value;
+            const quantity = parseInt(document.getElementById("quantity").value);
+            const total_price = parseFloat(document.getElementById("totalPrice").value);
+
+            if (!item_name) {
+                logOutput("Please provide an item name!", true);
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/orders/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${accessToken}`
+                    },
+                    body: JSON.stringify({ item_name, quantity, total_price })
+                });
+
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.detail || "Failed to create order");
+
+                logOutput(data);
+            } catch (err) {
+                logOutput(err.message, true);
+            }
+        }
+    </script>
+</body>
+</html>
