@@ -7,15 +7,24 @@ from sqlalchemy.orm import Session
 import redis
 from jose import JWTError, jwt
 
-from database import engine, Base, get_db
 import models
+import schemas
+import security
+from database import engine, Base, get_db
 from schemas import UserCreate, UserResponse
 from security import hash_password, verify_password, create_access_token, SECRET_KEY, ALGORITHM
 
-# Create all database tables automatically on startup
-models.Base.metadata.create_all(bind=engine)
-
 app = FastAPI(title="ShopFlow Event-Driven API")
+
+
+@app.on_event("startup")
+def on_startup():
+    """
+    Create all database tables on application startup — not at import time.
+    This keeps `from main import app` safe to run in tests/CI without a live database.
+    """
+    models.Base.metadata.create_all(bind=engine)
+
 
 # Redis connection setup using environment variables (Production standard)
 REDIS_HOST = os.getenv("REDIS_HOST", "redis")
@@ -45,7 +54,7 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
             raise credentials_exception
     except JWTError:
         raise credentials_exception
-    
+
     user = db.query(models.User).filter(models.User.email == email).first()
     if user is None:
         raise credentials_exception
@@ -128,7 +137,7 @@ def login_user(user: UserCreate, db: Session = Depends(get_db)):
 
 @app.post("/orders/")
 def create_order(
-    order: OrderCreate, 
+    order: OrderCreate,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
