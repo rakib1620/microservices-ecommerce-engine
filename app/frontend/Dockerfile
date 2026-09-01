@@ -1,5 +1,10 @@
 FROM nginx:1.27-alpine
 
+# Patch OS-level packages to their latest available fixed versions.
+# Base image tags can lag behind newly discovered CVEs even within
+# the same nginx version — this keeps the image current.
+RUN apk update && apk upgrade --no-cache
+
 # Remove default nginx static content and config
 RUN rm -rf /usr/share/nginx/html/* /etc/nginx/conf.d/default.conf
 
@@ -18,7 +23,4 @@ USER nginx
 
 EXPOSE 8080
 
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD wget -qO- http://localhost:8080/healthz || exit 1
-
-ENTRYPOINT ["/entrypoint.sh"]
+HEALTHCHECK --interval=30s --timeout=3s
