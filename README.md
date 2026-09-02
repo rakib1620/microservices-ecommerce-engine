@@ -214,3 +214,4 @@ Metrics, logs, and traces are correlated, not siloed — a signal of senior-leve
 <sub>Built as a hands-on DevOps practice project — event-driven e-commerce, monorepo → AWS EKS.</sub>
 </div>
 
+# OIDC setup complete - testing ECR push
