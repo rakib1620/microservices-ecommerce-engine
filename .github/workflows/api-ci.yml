@@ -1,4 +1,4 @@
-name: API CI
+name: API CI/CD
 
 on:
   push:
@@ -11,6 +11,10 @@ on:
     paths:
       - "app/api/**"
       - ".github/workflows/api-ci.yml"
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REPOSITORY: microservices-ecommerce-api
 
 jobs:
   test:
@@ -33,7 +37,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('app/api/requirements.txt', 'app/api/requirements-dev.txt') }}
+          key: ${{ runner.os }}-pip-api-${{ hashFiles('app/api/requirements.txt', 'app/api/requirements-dev.txt') }}
 
       - name: Install dependencies
         run: |
@@ -46,14 +50,36 @@ jobs:
           PYTHONPATH: .
         run: pytest test/
 
-  docker-build:
-    name: Docker Build Check
+  docker-build-and-push:
+    name: Docker Build & Push to ECR
     runs-on: ubuntu-latest
     needs: test
+    permissions:
+      contents: read
+      id-token: write
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Build Docker image (verify only, no push)
-        run: docker build -t api-service:ci-check ./app/api
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::993952121311:role/github-actions-ecr-push
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, tag, and push image to Amazon ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:$IMAGE_TAG ./app/api
+          docker tag $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:$IMAGE_TAG $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:latest
+          docker push $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:$IMAGE_TAG
+          docker push $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:latest
+          echo "Image pushed: $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:$IMAGE_TAG"
+
