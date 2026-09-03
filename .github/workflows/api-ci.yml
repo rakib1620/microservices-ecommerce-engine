@@ -1,13 +1,13 @@
 name: API CI/CD
 
-    on:
+on:
   push:
     branches: [ "main", "feat/**", "fix/**" ]
     paths:
       - "app/api/**"
       - ".github/workflows/api-ci.yml"
   pull_request:
-    branches: [main]
+    branches: [ "main" ]
     paths:
       - "app/api/**"
       - ".github/workflows/api-ci.yml"
@@ -51,7 +51,7 @@ jobs:
         run: pytest test/
 
   docker-build-and-push:
-    name: Docker Build & Push to ECR
+    name: Build & Push to ECR
     runs-on: ubuntu-latest
     needs: test
     permissions:
@@ -65,7 +65,7 @@ jobs:
       - name: Configure AWS credentials via OIDC
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::993952121311:role/github-actions-ecr-push
+          role-to-assume: arn:aws:iam::993952121311:role/myecr
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Login to Amazon ECR
@@ -78,8 +78,6 @@ jobs:
           IMAGE_TAG: ${{ github.sha }}
         run: |
           docker build -t $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:$IMAGE_TAG ./app/api
-          docker tag $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:$IMAGE_TAG $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:latest
           docker push $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:$IMAGE_TAG
-          docker push $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:latest
           echo "Image pushed: $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:$IMAGE_TAG"
-
+# trigger fresh pipeline
