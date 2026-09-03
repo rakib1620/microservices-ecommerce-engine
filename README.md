@@ -217,3 +217,4 @@ Metrics, logs, and traces are correlated, not siloed — a signal of senior-leve
 # OIDC setup complete - testing ECR push
 # Phase 3 OIDC test - final check
 # Phase 3 Complete - ECR push with OIDC verified
+# ECR verification test
