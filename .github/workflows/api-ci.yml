@@ -1,8 +1,8 @@
 name: API CI/CD
 
-on:
+    on:
   push:
-    branches: [main]
+    branches: [ "main", "feat/**", "fix/**" ]
     paths:
       - "app/api/**"
       - ".github/workflows/api-ci.yml"
