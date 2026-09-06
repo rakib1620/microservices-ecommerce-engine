@@ -184,3 +184,4 @@ def create_order(
         )
 # ECR test
 # Final OIDC ECR test
+# Final ECR test - branch protection removed
