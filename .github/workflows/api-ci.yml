@@ -2,6 +2,8 @@ name: API CI/CD
 
 on:
   push:
+    branches: [ "main", "fix/**", "feat/**", "worker/**", "new/**", "test/**" ]
+  pull_request:
     branches: [ "main" ]
   workflow_dispatch:
 
@@ -26,12 +28,11 @@ jobs:
           role-to-assume: arn:aws:iam::993952121311:role/UPDATE-ECR
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Debug AWS Identity (Optional - Remove after success)
+      - name: Debug OIDC Identity
         run: |
-          echo "✅ AWS Identity:"
-          aws sts get-caller-identity
-          echo "✅ ECR Repositories:"
-          aws ecr describe-repositories --region ${{ env.AWS_REGION }}
+          echo "🔍 Current Branch: ${{ github.ref_name }}"
+          echo "🔍 Repository: ${{ github.repository }}"
+          aws sts get-caller-identity || echo "❌ Failed to get identity"
 
       - name: Login to Amazon ECR
         id: login-ecr
@@ -44,13 +45,7 @@ jobs:
         run: |
           echo "📦 Building Docker image..."
           docker build -t $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:$IMAGE_TAG ./app/api
-          
           echo "📤 Pushing image to ECR..."
           docker push $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:$IMAGE_TAG
-          
-          echo "🏷️ Tagging as latest..."
-          docker tag $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:$IMAGE_TAG $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:latest
-          docker push $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:latest
-          
           echo "✅ Image pushed successfully!"
           echo "📍 Image URI: $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:$IMAGE_TAG"
