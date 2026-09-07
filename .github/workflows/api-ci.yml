@@ -2,8 +2,6 @@ name: API CI/CD
 
 on:
   push:
-    branches: [ "main", "fix/**", "feat/**", "worker/**", "new/**", "test/**" ]
-  pull_request:
     branches: [ "main" ]
   workflow_dispatch:
 
@@ -25,14 +23,11 @@ jobs:
       - name: Configure AWS credentials via OIDC
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::993952121311:role/UPDATE-ECR
+          role-to-assume: arn:aws:iam::880147167745:role/ECR-RULES
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Debug OIDC Identity
-        run: |
-          echo "🔍 Current Branch: ${{ github.ref_name }}"
-          echo "🔍 Repository: ${{ github.repository }}"
-          aws sts get-caller-identity || echo "❌ Failed to get identity"
+      - name: Debug AWS Identity
+        run: aws sts get-caller-identity
 
       - name: Login to Amazon ECR
         id: login-ecr
@@ -43,9 +38,6 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          echo "📦 Building Docker image..."
           docker build -t $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:$IMAGE_TAG ./app/api
-          echo "📤 Pushing image to ECR..."
           docker push $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:$IMAGE_TAG
           echo "✅ Image pushed successfully!"
-          echo "📍 Image URI: $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:$IMAGE_TAG"
