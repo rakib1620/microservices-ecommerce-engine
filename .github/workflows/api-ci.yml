@@ -20,6 +20,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Print OIDC Token (Debug)
+        run: |
+          TOKEN=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL" | jq -r '.token')
+          echo "Token claims:"
+          echo $TOKEN | cut -d'.' -f2 | base64 -d | jq .
+
       - name: Configure AWS credentials via OIDC
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -48,4 +55,3 @@ jobs:
           docker push $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:$IMAGE_TAG
           echo "✅ Image pushed successfully!"
           echo "📍 Image URI: $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:$IMAGE_TAG"
-# force refresh
