@@ -1,7 +1,7 @@
 version: 2
 updates:
   - package-ecosystem: "pip"
-    directory: "/"
+    directory: "/home/rakib/Event-Driven-e-Commerce/microservices-ecommerce-engine/app/api"  
     schedule:
       interval: "weekly"
   - package-ecosystem: "docker"
