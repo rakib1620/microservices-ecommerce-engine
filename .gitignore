@@ -9,3 +9,6 @@ node_modules/
 *.tfstate
 *.tfstate.backup
 .DS_Store
+
+cosign.key
+*.key
